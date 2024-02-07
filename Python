@@ -1,4 +1,7 @@
 
+Hier ist der vollständige Code mit einer Eingabemöglichkeit für den Spieler implementiert:
+
+```python
 import pygame
 import random
 
@@ -46,6 +49,42 @@ def display_text(text, x, y):
     text_surface = font.render(text, True, BLACK)
     screen.blit(text_surface, (x, y))
 
+# Hilfsfunktion zur Eingabe der Artikelnummer
+def get_input():
+    input_text = ""
+    input_rect = pygame.Rect(200, 450, 400, 50)
+    active = False
+    
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_rect.collidepoint(event.pos):
+                    active = True
+                else:
+                    active = False
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_BACKSPACE:
+                        input_text = input_text[:-1]
+                    elif event.key == pygame.K_RETURN:
+                        return input_text
+                    else:
+                        input_text += event.unicode
+        
+        screen.fill(WHITE)
+        screen.blit(current_product_image, (200, 100))
+        display_text("Gib die Artikelnummer ein:", 200, 400)
+        
+        # Anzeige der Eingabe
+        pygame.draw.rect(screen, BLACK, input_rect, 2)
+        text_surface = font.render(input_text, True, BLACK)
+        screen.blit(text_surface, (input_rect.x + 5, input_rect.y + 5))
+        
+        pygame.display.flip()
+
 # Hauptprogrammschleife
 running = True
 while running:
@@ -53,15 +92,18 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # Zeige das aktuelle Produktbild an
     screen.fill(WHITE)  # Hintergrund löschen
     screen.blit(current_product_image, (200, 100))  # Produktbild anzeigen
-
-    # Frage den Spieler nach der Artikelnummer
     display_text("Gib die Artikelnummer ein:", 200, 400)
     
-    # Hier würdest du normalerweise eine Eingabemöglichkeit für den Spieler implementieren
+    # Spieler gibt die Artikelnummer ein
+    input_text = get_input()
+    
+    # Hier könntest du die Eingabe überprüfen, ob sie korrekt ist
 
     pygame.display.flip()
 
 pygame.quit()
+```
+
+Dieser Code enthält die Implementierung einer Eingabemöglichkeit für den Spieler, um die Artikelnummer einzugeben. Die Funktion `get_input()` ermöglicht es dem Spieler, die Artikelnummer über die Tastatur einzugeben, und die eingegebene Nummer wird auf dem Bildschirm angezeigt.
