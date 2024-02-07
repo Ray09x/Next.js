@@ -1,109 +1,63 @@
+import UIKit
 
-Hier ist der vollständige Code mit einer Eingabemöglichkeit für den Spieler implementiert:
+class Product {
+    var name: String
+    var number: String
+    var imageURL: URL
 
-```python
-import pygame
-import random
-
-# Definiere Farben
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-
-# Initialisiere Pygame
-pygame.init()
-
-# Bildschirmgröße
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-
-# Setze die Bildschirmgröße
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Artikelnummer lernen")
-
-# Schriftart initialisieren
-font = pygame.font.Font(None, 36)
-
-# Dictionary mit Produktbild-URLs und zugehörigen Artikelnummern für 3 Artikel als Beispiel
-product_data = {
-    "apple": "A123",
-    "banana": "B456",
-    "orange": "C789"
+    init(name: String, number: String, imageURL: URL) {
+        self.name = name
+        self.number = number
+        self.imageURL = imageURL
+    }
 }
 
-# Lade die Produktbilder
-apple_image = pygame.image.load("apple_image.png")  # Hier müsstest du den tatsächlichen Dateipfad angeben
-banana_image = pygame.image.load("banana_image.png")  # Hier müsstest du den tatsächlichen Dateipfad angeben
-orange_image = pygame.image.load("orange_image.png")  # Hier müsstest du den tatsächlichen Dateipfad angeben
+class GameViewController: UIViewController {
+    @IBOutlet weak var productImageView: UIImageView!
+    @IBOutlet weak var inputTextField: UITextField!
+    @IBOutlet weak var messageLabel: UILabel!
 
-# Liste mit den Produktbildern
-product_images = [apple_image, banana_image, orange_image]
+    var products = [Product]()
+    var currentProduct: Product?
+    var score = 0
 
-# Zufällige Auswahl eines Produkts
-current_product_name = random.choice(list(product_data.keys()))
-current_product_number = product_data[current_product_name]
-current_product_image = product_images[list(product_data.keys()).index(current_product_name)]
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        loadProducts()
+        startNewRound()
+    }
 
-# Hilfsfunktion zur Anzeige von Text
-def display_text(text, x, y):
-    text_surface = font.render(text, True, BLACK)
-    screen.blit(text_surface, (x, y))
+    func loadProducts() {
+        let apple = Product(name: "Apple", number: "123", imageURL: URL(string: "https://www.example.com/apple.jpg")!)
+        let banana = Product(name: "Banana", number: "456", imageURL: URL(string: "https://www.example.com/banana.jpg")!)
+        let orange = Product(name: "Orange", number: "789", imageURL: URL(string: "https://www.example.com/orange.jpg")!)
+        products = [apple, banana, orange]
+    }
 
-# Hilfsfunktion zur Eingabe der Artikelnummer
-def get_input():
-    input_text = ""
-    input_rect = pygame.Rect(200, 450, 400, 50)
-    active = False
-    
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if input_rect.collidepoint(event.pos):
-                    active = True
-                else:
-                    active = False
-            if event.type == pygame.KEYDOWN:
-                if active:
-                    if event.key == pygame.K_BACKSPACE:
-                        input_text = input_text[:-1]
-                    elif event.key == pygame.K_RETURN:
-                        return input_text
-                    else:
-                        input_text += event.unicode
-        
-        screen.fill(WHITE)
-        screen.blit(current_product_image, (200, 100))
-        display_text("Gib die Artikelnummer ein:", 200, 400)
-        
-        # Anzeige der Eingabe
-        pygame.draw.rect(screen, BLACK, input_rect, 2)
-        text_surface = font.render(input_text, True, BLACK)
-        screen.blit(text_surface, (input_rect.x + 5, input_rect.y + 5))
-        
-        pygame.display.flip()
+    func startNewRound() {
+        currentProduct = products.randomElement()
+        displayProduct()
+    }
 
-# Hauptprogrammschleife
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    func displayProduct() {
+        guard let product = currentProduct else { return }
+        do {
+            let imageData = try Data(contentsOf: product.imageURL)
+            productImageView.image = UIImage(data: imageData)
+        } catch {
+            print("Failed to load image:", error)
+        }
+    }
 
-    screen.fill(WHITE)  # Hintergrund löschen
-    screen.blit(current_product_image, (200, 100))  # Produktbild anzeigen
-    display_text("Gib die Artikelnummer ein:", 200, 400)
-    
-    # Spieler gibt die Artikelnummer ein
-    input_text = get_input()
-    
-    # Hier könntest du die Eingabe überprüfen, ob sie korrekt ist
-
-    pygame.display.flip()
-
-pygame.quit()
-```
-
-Dieser Code enthält die Implementierung einer Eingabemöglichkeit für den Spieler, um die Artikelnummer einzugeben. Die Funktion `get_input()` ermöglicht es dem Spieler, die Artikelnummer über die Tastatur einzugeben, und die eingegebene Nummer wird auf dem Bildschirm angezeigt.
+    @IBAction func confirmButtonPressed(_ sender: UIButton) {
+        guard let input = inputTextField.text, let currentProduct = currentProduct else { return }
+        if input == currentProduct.number {
+            score += 1
+            messageLabel.text = "Correct!"
+        } else {
+            messageLabel.text = "Incorrect! Try again."
+        }
+        inputTextField.text = ""
+        startNewRound()
+    }
+}
