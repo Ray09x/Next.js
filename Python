@@ -1,70 +1,123 @@
-import SpriteKit
-import GameplayKit
+import UIKit
+import PlaygroundSupport
+import Alamofire
+import AVFoundation
 
-let whiteColor = UIColor.white
-let blackColor = UIColor.black
+// Define colors
+let white = UIColor.white
+let black = UIColor.black
 
-// Initialize your game scene, view, etc. in Swift using SpriteKit
-
+// Screen size
 let screenWidth: CGFloat = 800
 let screenHeight: CGFloat = 600
 
-// Assuming you have a GameScene class to handle the game
-let scene = GameScene(size: CGSize(width: screenWidth, height: screenHeight))
-scene.scaleMode = .aspectFill
+// Set the screen size
+let screen = UIView(frame: CGRect(x: 0, y: 0, width: screenWidth, height: screenHeight))
+screen.backgroundColor = white
 
-// Create a view and present the scene
-let view = SKView(frame: CGRect(x: 0, y: 0, width: screenWidth, height: screenHeight))
-view.presentScene(scene)
+// Label to display text
+let textLabel = UILabel(frame: CGRect(x: 200, y: 300, width: 400, height: 50))
+textLabel.textColor = black
+textLabel.textAlignment = .center
+textLabel.font = UIFont.systemFont(ofSize: 20)
+textLabel.text = "Enter the article number"
+screen.addSubview(textLabel)
 
-// Set up the font for displaying text
-let font = UIFont.systemFont(ofSize: 36)
+// Text field for input
+let inputTextField = UITextField(frame: CGRect(x: 300, y: 350, width: 150, height: 50))
+inputTextField.backgroundColor = white
+inputTextField.layer.borderColor = black.cgColor
+inputTextField.layer.borderWidth = 2.0
+inputTextField.textAlignment = .center
+inputTextField.font = UIFont.systemFont(ofSize: 20)
+screen.addSubview(inputTextField)
 
-var productData: [String: [String: String]] = [
-    "apple": ["number": "123", "image_url": "https://www.kochschule.de/sites/default/files/images/kochwissen/448/apfel.jpg"],
-    "banana": ["number": "456", "image_url": "https://www.kochschule.de/sites/default/files/images/kochwissen/440/banane.jpg"],
-    "orange": ["number": "789", "image_url": "https://www.kochschule.de/sites/default/files/images/kochwissen/432/orange.jpg"]
+// Buttons for numbers and confirm
+let buttonTitles = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Confirm"]
+var buttons: [UIButton] = []
+
+for i in 0..<buttonTitles.count {
+    let button = UIButton(type: .system)
+    button.frame = CGRect(x: 300 + (i % 3) * 50, y: 400 + (i / 3) * 50, width: 50, height: 50)
+    button.setTitle(buttonTitles[i], for: .normal)
+    button.layer.borderColor = black.cgColor
+    button.layer.borderWidth = 2.0
+    button.addTarget(nil, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+    screen.addSubview(button)
+    buttons.append(button)
+}
+
+// Image view for product image
+let productImageView = UIImageView(frame: CGRect(x: 300, y: 100, width: 200, height: 200))
+screen.addSubview(productImageView)
+
+// Dictionary with product image URLs and corresponding article numbers for 3 products as an example
+let productData = [
+    "apple": ["123", "https://www.kochschule.de/sites/default/files/images/kochwissen/448/apfel.jpg"],
+    "banana": ["456", "https://www.kochschule.de/sites/default/files/images/kochwissen/440/banane.jpg"],
+    "orange": ["789", "https://www.kochschule.de/sites/default/files/images/kochwissen/432/orange.jpg"]
 ]
 
-// Load images using a network request and SKTexture
-var productImages: [String: SKTexture] = [:]
+var productImages: [String: UIImage] = [:]
+
+// Load the product images from URLs and resize them
 for (productName, data) in productData {
-    let url = URL(string: data["image_url"]!)!
-    let imageData = try! Data(contentsOf: url)
-    let image = UIImage(data: imageData)!
-    let texture = SKTexture(image: image)
-    productImages[productName] = texture
+    guard let url = URL(string: data[1]), let imageData = try? Data(contentsOf: url), let image = UIImage(data: imageData) else {
+        continue
+    }
+    let resizedImage = resizeImage(image: image, targetSize: CGSize(width: 200, height: 200))
+    productImages[productName] = resizedImage
 }
 
+// Randomly select a product
 var currentProductName = productImages.keys.randomElement()!
-var currentProductNumber = productData[currentProductName]!["number"]!
-var currentProductImage = productImages[currentProductName]!
+var currentProductNumber = productData[currentProductName]![0]
+productImageView.image = productImages[currentProductName]
 
-// Define functions to display text and draw buttons using SpriteKit
-func displayText(_ text: String, x: CGFloat, y: CGFloat) {
-    let textNode = SKLabelNode(fontNamed: "Arial")
-    textNode.text = text
-    textNode.fontColor = blackColor
-    textNode.position = CGPoint(x: x, y: y)
-    scene.addChild(textNode)
+// Function to resize image
+func resizeImage(image: UIImage, targetSize: CGSize) -> UIImage {
+    let size = image.size
+
+    let widthRatio = targetSize.width / size.width
+    let heightRatio = targetSize.height / size.height
+
+    let newSize: CGSize
+    if widthRatio > heightRatio {
+        newSize = CGSize(width: size.width * heightRatio, height: size.height * heightRatio)
+    } else {
+        newSize = CGSize(width: size.width * widthRatio, height: size.height * widthRatio)
+    }
+
+    let rect = CGRect(origin: .zero, size: newSize)
+
+    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+    image.draw(in: rect)
+    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    return newImage!
 }
 
-func drawButton(_ text: String, x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
-    let button = SKShapeNode(rect: CGRect(x: x, y: y, width: width, height: height))
-    button.strokeColor = blackColor
-    button.lineWidth = 2
-    scene.addChild(button)
-    
-    let textNode = SKLabelNode(fontNamed: "Arial")
-    textNode.text = text
-    textNode.fontColor = blackColor
-    textNode.position = CGPoint(x: x + width / 2, y: y + height / 2)
-    scene.addChild(textNode)
+// Function to handle button press
+@objc func buttonPressed(_ sender: UIButton) {
+    if let buttonText = sender.currentTitle {
+        if buttonText == "Confirm" {
+            if let inputText = inputTextField.text {
+                if inputText == currentProductNumber {
+                    print("Correct input: \(inputText)")
+                    currentProductName = productImages.keys.randomElement()!
+                    currentProductNumber = productData[currentProductName]![0]
+                    productImageView.image = productImages[currentProductName]
+                } else {
+                    print("Incorrect input: \(inputText)")
+                }
+                inputTextField.text = ""
+            }
+        } else {
+            inputTextField.text = (inputTextField.text ?? "") + buttonText
+        }
+        inputTextField.text = String(inputTextField.text!.suffix(3))
+    }
 }
 
-var inputText = ""
-
-// Handle user input and game loop within your GameScene class
-// Use touchesBegan and update methods to handle touch input and game logic
-
-
+PlaygroundPage.current.liveView = screen
