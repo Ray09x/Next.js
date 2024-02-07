@@ -1,63 +1,70 @@
-import UIKit
+import SpriteKit
+import GameplayKit
 
-class Product {
-    var name: String
-    var number: String
-    var imageURL: URL
+let whiteColor = UIColor.white
+let blackColor = UIColor.black
 
-    init(name: String, number: String, imageURL: URL) {
-        self.name = name
-        self.number = number
-        self.imageURL = imageURL
-    }
+// Initialize your game scene, view, etc. in Swift using SpriteKit
+
+let screenWidth: CGFloat = 800
+let screenHeight: CGFloat = 600
+
+// Assuming you have a GameScene class to handle the game
+let scene = GameScene(size: CGSize(width: screenWidth, height: screenHeight))
+scene.scaleMode = .aspectFill
+
+// Create a view and present the scene
+let view = SKView(frame: CGRect(x: 0, y: 0, width: screenWidth, height: screenHeight))
+view.presentScene(scene)
+
+// Set up the font for displaying text
+let font = UIFont.systemFont(ofSize: 36)
+
+var productData: [String: [String: String]] = [
+    "apple": ["number": "123", "image_url": "https://www.kochschule.de/sites/default/files/images/kochwissen/448/apfel.jpg"],
+    "banana": ["number": "456", "image_url": "https://www.kochschule.de/sites/default/files/images/kochwissen/440/banane.jpg"],
+    "orange": ["number": "789", "image_url": "https://www.kochschule.de/sites/default/files/images/kochwissen/432/orange.jpg"]
+]
+
+// Load images using a network request and SKTexture
+var productImages: [String: SKTexture] = [:]
+for (productName, data) in productData {
+    let url = URL(string: data["image_url"]!)!
+    let imageData = try! Data(contentsOf: url)
+    let image = UIImage(data: imageData)!
+    let texture = SKTexture(image: image)
+    productImages[productName] = texture
 }
 
-class GameViewController: UIViewController {
-    @IBOutlet weak var productImageView: UIImageView!
-    @IBOutlet weak var inputTextField: UITextField!
-    @IBOutlet weak var messageLabel: UILabel!
+var currentProductName = productImages.keys.randomElement()!
+var currentProductNumber = productData[currentProductName]!["number"]!
+var currentProductImage = productImages[currentProductName]!
 
-    var products = [Product]()
-    var currentProduct: Product?
-    var score = 0
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        loadProducts()
-        startNewRound()
-    }
-
-    func loadProducts() {
-        let apple = Product(name: "Apple", number: "123", imageURL: URL(string: "https://www.example.com/apple.jpg")!)
-        let banana = Product(name: "Banana", number: "456", imageURL: URL(string: "https://www.example.com/banana.jpg")!)
-        let orange = Product(name: "Orange", number: "789", imageURL: URL(string: "https://www.example.com/orange.jpg")!)
-        products = [apple, banana, orange]
-    }
-
-    func startNewRound() {
-        currentProduct = products.randomElement()
-        displayProduct()
-    }
-
-    func displayProduct() {
-        guard let product = currentProduct else { return }
-        do {
-            let imageData = try Data(contentsOf: product.imageURL)
-            productImageView.image = UIImage(data: imageData)
-        } catch {
-            print("Failed to load image:", error)
-        }
-    }
-
-    @IBAction func confirmButtonPressed(_ sender: UIButton) {
-        guard let input = inputTextField.text, let currentProduct = currentProduct else { return }
-        if input == currentProduct.number {
-            score += 1
-            messageLabel.text = "Correct!"
-        } else {
-            messageLabel.text = "Incorrect! Try again."
-        }
-        inputTextField.text = ""
-        startNewRound()
-    }
+// Define functions to display text and draw buttons using SpriteKit
+func displayText(_ text: String, x: CGFloat, y: CGFloat) {
+    let textNode = SKLabelNode(fontNamed: "Arial")
+    textNode.text = text
+    textNode.fontColor = blackColor
+    textNode.position = CGPoint(x: x, y: y)
+    scene.addChild(textNode)
 }
+
+func drawButton(_ text: String, x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
+    let button = SKShapeNode(rect: CGRect(x: x, y: y, width: width, height: height))
+    button.strokeColor = blackColor
+    button.lineWidth = 2
+    scene.addChild(button)
+    
+    let textNode = SKLabelNode(fontNamed: "Arial")
+    textNode.text = text
+    textNode.fontColor = blackColor
+    textNode.position = CGPoint(x: x + width / 2, y: y + height / 2)
+    scene.addChild(textNode)
+}
+
+var inputText = ""
+
+// Handle user input and game loop within your GameScene class
+// Use touchesBegan and update methods to handle touch input and game logic
+
+
