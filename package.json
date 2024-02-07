@@ -1,22 +1,43 @@
-{
-  "name": "project-template-next.js",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "next": "12.0.9",
-    "react": "17.0.2",
-    "react-dom": "17.0.2"
-  },
-  "devDependencies": {
-    "@types/node": "17.0.12",
-    "@types/react": "17.0.38",
-    "eslint": "8.7.0",
-    "eslint-config-next": "12.0.9",
-    "typescript": "4.5.5"
-  }
+import random
+
+# Dictionary mit Produktbild-URLs und zugehörigen Artikelnummern für 300 Artikel
+products = {
+    f"Produkt{i}": {"url": f"url_zu_bild_{i}.jpg", "article_number": f"{100000 + i}"}
+    for i in range(1, 301)
 }
+
+def show_product(product_info):
+    print("Produktbild wird angezeigt...")
+    # Hier wird das Bild angezeigt, dies ist plattformspezifisch und muss entsprechend implementiert werden
+    print("Bild anzeigen:", product_info["url"])
+
+def main():
+    print("Willkommen zum Artikelnummer-Lernspiel!")
+    while True:
+        product_name, product_info = random.choice(list(products.items()))
+        show_product(product_info)
+        
+        # Benutzer gibt die Artikelnummer ein
+        guess = input(f"Geben Sie die Artikelnummer von '{product_name}' ein: ")
+        
+        # Benutzer bestätigt mit der grünen Taste und kann mit der Backspace-Taste korrigieren
+        confirm = ""
+        while confirm.lower() != "grün":
+            confirm = input("Drücken Sie die grüne Taste, um fortzufahren, oder die Backspace-Taste, um zu korrigieren: ")
+            if confirm.lower() == "grün":
+                break
+            elif confirm.lower() == "backspace":
+                guess = input("Bitte korrigieren Sie die Artikelnummer: ")
+        
+        if guess == product_info["article_number"]:
+            print("Richtig! Die Artikelnummer ist korrekt.")
+        else:
+            print(f"Falsch. Die richtige Artikelnummer ist {product_info['article_number']}.")
+
+        play_again = input("Möchten Sie ein weiteres Produkt lernen? (ja/nein): ")
+        if play_again.lower() != "ja":
+            print("Auf Wiedersehen!")
+            break
+
+if __name__ == "__main__":
+    main()
